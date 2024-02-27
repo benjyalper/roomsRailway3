@@ -53,11 +53,11 @@ body {
 
 .frame {
     background-color: rgb(235, 237, 236);
-    border: 1px solid black;
+    /* border: 1px solid black; */
 }
 
 .cell {
-    border: 1px solid black;
+    /* border: 1px solid black; */
     /* change */
     height: 3rem;
 }
@@ -255,5 +255,13 @@ body {
         margin-right: 330px !important;
     }
 
+    .cell {
+        /* change */
+        height: 3rem;
+    }
 
+    .frame {
+        background-color: rgb(235, 237, 236);
+        font-size: 10px;
+    }
 }
