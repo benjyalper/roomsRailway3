@@ -10,7 +10,7 @@ body {
 .navbar-room-schedule {
 
     background-color: rgb(241, 249, 239);
-    width: 90%;
+    width: 100%;
     /* Set the width to a specific value, e.g., 80% */
     max-width: 1200px;
     /* Set a max-width to prevent it from expanding indefinitely */
@@ -37,7 +37,7 @@ body {
     font-size: 28px;
     color: rgb(19, 86, 39);
     background-color: rgb(241, 249, 239);
-    width: 90%;
+    width: 100%;
     /* Set the width to the same value as the navbar */
     max-width: 1200px;
     /* Set a max-width to prevent it from expanding indefinitely */
@@ -68,7 +68,7 @@ body {
     grid-gap: 0;
     padding: 20px;
     background-color: aliceblue;
-    width: 90%;
+    width: 100%;
     /* Set the width to the same value as the navbar */
     max-width: 1200px;
     /* Set a max-width to prevent it from expanding indefinitely */
