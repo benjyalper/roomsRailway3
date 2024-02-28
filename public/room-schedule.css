@@ -44,9 +44,6 @@ body {
     padding: 10px;
 }
 
-#datePicker {
-    width: 200px;
-}
 
 .back-btn {
     /* Style the back button as needed */
@@ -239,9 +236,22 @@ body {
 #lookupDate {
     border-radius: 5px;
     padding: 10px;
-    height: 2rem;
+    height: 3rem;
     border: 2px solid rgb(135, 192, 155);
 }
+
+#datePicker {
+    width: 200px;
+}
+
+#lookupDate::before {
+    content: "בחר/י תאריך ";
+    font-size: 10px;
+    margin-left: 15px;
+    /* Add other styles if needed */
+    color: rgb(19, 86, 39);
+}
+
 
 /* Add these styles to your CSS file */
 
@@ -268,21 +278,13 @@ body {
         font-size: 10px;
     }
 
-    #lookupDate+label {
-        display: none;
-        /* Hide the original label */
-    }
-
-    #lookupDate::before {
-        content: "בחר/י תאריך ";
-        font-size: 10px;
-        margin-left: 15px
-            /* Add other styles if needed */
-    }
-
     #lookupDate {
         height: 48px;
         width: 120px;
+    }
+
+    #heading {
+        font-size: 20px;
     }
 
 }
@@ -293,16 +295,6 @@ body {
         gap: 2px;
     }
 
-    #lookupDate+label {
-        display: none;
-        /* Hide the original label */
-    }
-
-    #lookupDate::before {
-        content: "בחר/י תאריך ";
-        font-size: 10px;
-        margin-left: 15px
-    }
 
     #lookupDate {
         height: 48px;
