@@ -53,7 +53,7 @@ body {
     padding: 5px;
     color: rgb(135, 192, 155);
     border-color: rgb(5, 239, 107);
-    margin-right: 20px;
+    margin-left: 20px;
 
     /* Add your custom styles here */
 }
@@ -238,6 +238,7 @@ body {
     padding: 10px;
     height: 3rem;
     border: 2px solid rgb(135, 192, 155);
+    margin-left: 20px;
 }
 
 #datePicker {
@@ -250,6 +251,10 @@ body {
     margin-left: 15px;
     /* Add other styles if needed */
     color: rgb(19, 86, 39);
+}
+
+.navbar-toggler {
+    margin-right: 20px;
 }
 
 

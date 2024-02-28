@@ -19,7 +19,15 @@
         <div class="container-fluid">
             <nav class="navbar navbar-room-schedule">
                 <!-- <div id="lookupResult" style="display: none;"></div> -->
-                <button class="back-btn"><i class="fa fa-home fa-2x" aria-hidden="true"></i></button>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false"
+                    aria-label="Toggle navigation" style="margin-left: 20px;">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div>
+                    <input type="date" id="lookupDate" onchange="fetchDataByDate()">
+                </div>
 
                 <div class="collapse navbar-collapse" id="navbarNavDropdown">
                     <ul class="navbar-nav">
@@ -37,23 +45,12 @@
                     </ul>
                 </div>
 
-                <div>
-                    <input type="date" id="lookupDate" onchange="fetchDataByDate()">
-                </div>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false"
-                    aria-label="Toggle navigation" style="margin-left: 20px;">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
+                <button class="back-btn"><i class="fa fa-home fa-2x" aria-hidden="true"></i></button>
 
             </nav>
 
-
-
             <h1 id="heading">טבלת חדרים</h1>
-
 
             <div class="grid-container">
                 <!-- Creating the grid cells -->
