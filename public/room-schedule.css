@@ -238,7 +238,7 @@ body {
     padding: 10px;
     height: 3rem;
     border: 2px solid rgb(135, 192, 155);
-    margin-left: 20px;
+    margin-left: 28px;
 }
 
 #datePicker {
@@ -256,6 +256,7 @@ body {
 .navbar-toggler {
     margin-right: 20px;
 }
+
 
 
 /* Add these styles to your CSS file */
