@@ -32,7 +32,7 @@
     padding: 5px;
     color: rgb(135, 192, 155);
     border-color: rgb(5, 239, 107);
-
+    margin-left: 20px;
     /* Add your custom styles here */
 }
 
@@ -70,6 +70,10 @@ p {
     font-style: italic;
     font-weight: bolder;
     font-size: larger;
+}
+
+.navbar-toggler {
+    margin-right: 20px;
 }
 
 @media screen and (max-width: 700px) {
@@ -114,7 +118,7 @@ p {
     }
 
     h3 {
-        font-size: 16px !important;
+        font-size: 20px !important;
         padding: 8px;
         margin-right: 25px;
     }
