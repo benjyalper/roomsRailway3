@@ -95,6 +95,10 @@ select {
     height: 2rem;
 }
 
+#selectedDate {
+    width: 12rem;
+}
+
 #heading {
     /* margin: auto; */
     text-align: center;
