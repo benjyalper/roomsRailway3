@@ -1,6 +1,32 @@
 $(document).ready(function () {
     let currentRoomNumber;
 
+    $('.sign-out-link').on('click', function () {
+        const signOutConfirmation = confirm('האם להתנתק?');
+        if (signOutConfirmation) {
+            $.ajax({
+                type: 'GET',
+                url: '/logout', // Adjust the URL based on your server configuration
+                xhrFields: {
+                    withCredentials: true // Include credentials (cookies) in the request
+                },
+                success: function (data) {
+                    // If the logout is successful, you might want to redirect to a login page or update the UI
+                    window.location.href = '/signin'; // Redirect to your login page
+                },
+                error: function (error) {
+                    // Handle the case where logout was not successful
+                    console.error('Logout failed:', error.statusText);
+                }
+            });
+        } else {
+            console.log("same user");
+        }
+
+
+    });
+
+
     $('.room').on('click', function () {
         const room = $(this).closest('.room');
         currentRoomNumber = $(room).data('room-number');
