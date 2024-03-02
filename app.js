@@ -15,14 +15,15 @@ import { Strategy as LocalStrategy } from 'passport-local';
 import session from 'express-session';
 import flash from 'express-flash';
 
-app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false }));
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(flash());
 
 const app = express();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const port = process.env.PORT || 3000;
+
+app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false }));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
 
 const users = [
     { id: 1, username: 'admin', password: 'admin', role: 'admin' },
