@@ -160,15 +160,15 @@ app.post('/submit', async (req, res) => {
 
 app.delete('/deleteEntry', async (req, res) => {
 
-    if (!req.user || req.user.role !== 'admin') {
-        return res.status(403).send('למשתמש זה אין הרשאה לעריכה, יש לפנות למנהל.');
-    }
-
     const { roomNumber, startTime } = req.query;
 
     // Validate parameters
     if (!roomNumber || !startTime) {
         return res.status(400).send('Bad Request: Missing parameters.');
+    }
+
+    if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).send('למשתמש זה אין הרשאה לעריכה, יש לפנות למנהל.');
     }
 
     try {
