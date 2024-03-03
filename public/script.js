@@ -237,27 +237,6 @@ async function dateData() {
 }
 
 
-// Function to check if the current time is within a specified range
-// function isCurrentTimeInRange(startTime, endTime) {
-//     const now = new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' });
-//     const nowDateTime = new Date(now);
-
-//     const [startHours, startMinutes, startSeconds] = startTime.split(':').map(Number);
-//     const startDateTime = new Date(nowDateTime.getFullYear(), nowDateTime.getMonth(), nowDateTime.getDate(), startHours, startMinutes, startSeconds);
-
-//     const [endHours, endMinutes, endSeconds] = endTime.split(':').map(Number);
-//     const endDateTime = new Date(nowDateTime.getFullYear(), nowDateTime.getMonth(), nowDateTime.getDate(), endHours, endMinutes, endSeconds);
-
-//     console.log(startDateTime, endDateTime)
-//     return nowDateTime >= startDateTime && nowDateTime <= endDateTime;
-// }
-
-
-// Other functions and code in your script.js file
-// $(document).ready(function () {
-//     $('#lookupDate').val(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }).slice(0, 10));
-// });
-
 // Function to delete colored cells and corresponding row from the database
 async function deleteColoredCells(roomNumber, startTime, endTime) {
     try {
