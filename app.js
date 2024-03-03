@@ -115,6 +115,7 @@ app.post('/submit', async (req, res) => {
     try {
 
         if (!req.user || req.user.role !== 'admin') {
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8');
             return res.status(403).send('למשתמש זה אין הרשאה לעריכה, יש לפנות למנהל.');
         }
 
@@ -168,7 +169,6 @@ app.delete('/deleteEntry', async (req, res) => {
     }
 
     if (!req.user || req.user.role !== 'admin') {
-        console.log('משתמש זה אין הרשאה לעריכה, יש לפנות למנהל.')
         return res.status(403).send('למשתמש זה אין הרשאה לעריכה, יש לפנות למנהל.');
     }
 
