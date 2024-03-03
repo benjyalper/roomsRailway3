@@ -184,8 +184,20 @@ async function fetchDataByDate() {
                                 method: 'DELETE',
                             });
 
+
+                            if (response.ok) {
+                                // Handle successful deletion, if needed
+                                console.log('Entry deleted successfully');
+                            } else {
+                                const errorMessage = await response.text();
+                                // Display the error message on the page or handle it in your application
+                                console.error(`Error deleting entry: ${response.status} - ${errorMessage}`);
+                                // Example: Display the error message in an alert
+                                alert(`Error deleting entry: ${errorMessage}`);
+                            }
                         } catch (error) {
-                            console.error(error);
+                            console.error('Network error:', error);
+                            // Handle network errors, if needed
                             throw error;
                         }
                     }
