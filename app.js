@@ -26,8 +26,7 @@ app.use(passport.session());
 app.use(flash());
 
 const users = [
-    { id: 1, username: 'benjyalper', password: 'Ag1ag1ag1$', role: 'admin' },
-    { id: 1, username: 'yosi', password: 'capybara', role: 'admin' },
+    { id: 1, username: 'admin', password: 'admin', role: 'admin' },
     { id: 2, username: 'adar', password: 'parrot', role: 'user' },
     { id: 3, username: 'yahav', password: 'pizi', role: 'user' }
 ];
@@ -127,6 +126,7 @@ app.post('/submit', async (req, res) => {
         const endTime = req.body.endTime;
         const roomNumber = req.body.roomNumber;
         const recurringEvent = req.body.recurringEvent || false;
+        const recurringNum = req.body.recurringNum;
 
         // Validate inputs (if needed)
 
@@ -134,15 +134,17 @@ app.post('/submit', async (req, res) => {
         await connection.beginTransaction();
 
         try {
-            // Insert the main event
-            await connection.execute('INSERT INTO selected_dates_3 (selected_date, names, color, startTime, endTime, roomNumber, recurringEvent) VALUES (?, ?, ?, ?, ?, ?, ?)', [selectedDate, names, selectedColor, startTime, endTime, roomNumber, recurringEvent]);
 
             if (recurringEvent) {
                 // Insert the recurring events for the next 4 weeks (adjust as needed)
-                for (let i = 1; i <= 4; i++) {
+                for (let i = 0; i < `${recurringNum}`; i++) {
                     const nextDate = moment(selectedDate).add(i, 'weeks').format('YYYY-MM-DD');
-                    await connection.execute('INSERT INTO selected_dates_3 (selected_date, names, color, startTime, endTime, roomNumber, recurringEvent) VALUES (?, ?, ?, ?, ?, ?, ?)', [nextDate, names, selectedColor, startTime, endTime, roomNumber, recurringEvent]);
+                    await connection.execute('INSERT INTO selected_dates_3 (selected_date, names, color, startTime, endTime, roomNumber, recurringEvent, recurringNum) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [nextDate, names, selectedColor, startTime, endTime, roomNumber, recurringEvent, recurringNum]);
                 }
+            } else {
+                // Insert the main event
+                await connection.execute('INSERT INTO selected_dates_3 (selected_date, names, color, startTime, endTime, roomNumber, recurringEvent) VALUES (?, ?, ?, ?, ?, ?, ?)', [selectedDate, names, selectedColor, startTime, endTime, roomNumber, recurringEvent]);
+
             }
 
             await connection.commit();
@@ -189,6 +191,49 @@ app.delete('/deleteEntry', async (req, res) => {
 });
 
 
+app.post('/checkRecurringEvent', async (req, res) => {
+    try {
+        const { selected_date, roomNumber, startTime, recurringNum } = req.body;
+
+        if (!selected_date || !roomNumber || !startTime) {
+            return res.status(400).send('Bad Request: Missing parameters.');
+        }
+
+        const connection = await pool.getConnection();
+
+        // Log recurringNum
+        console.log('Received parameters:', { selected_date, roomNumber, startTime, recurringNum });
+
+        // Check if there is any recurring event for the given parameters
+        const recurringQuery = 'SELECT * FROM selected_dates_3 WHERE selected_date = ? AND roomNumber = ? AND startTime = ? AND recurringEvent = true';
+        const [recurringResult] = await connection.execute(recurringQuery, [selected_date, roomNumber, startTime]);
+
+        // Check if there is any non-recurring event for the given parameters
+        const nonRecurringQuery = 'SELECT * FROM selected_dates_3 WHERE selected_date = ? AND roomNumber = ? AND startTime = ? AND recurringEvent = false';
+        const [nonRecurringResult] = await connection.execute(nonRecurringQuery, [selected_date, roomNumber, startTime]);
+
+        connection.release();
+
+        console.log('Recurring event query result:', recurringResult);
+        console.log('Non-recurring event query result:', nonRecurringResult);
+
+        const resultToSend = {
+            isRecurring: recurringResult.length > 0,
+            isNonRecurring: nonRecurringResult.length > 0,
+            recurringNum: recurringResult.length > 0 ? recurringResult[0].recurringNum : undefined,
+        };
+
+        res.json(resultToSend);
+        console.log(resultToSend.recurringNum)
+
+    } catch (error) {
+        console.error('Error checking recurring event:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+
 
 app.get('/room/:roomNumber', async (req, res) => {
     const roomNumber = req.params.roomNumber;
@@ -221,7 +266,7 @@ app.get('/fetchDataByDate', async (req, res) => {
         const lookupDate = req.query.date || moment().format('YYYY-MM-DD');
 
         const connection = await pool.getConnection();
-        const [rows] = await connection.execute('SELECT names, color, startTime, endTime, roomNumber FROM selected_dates_3 WHERE selected_date = ?', [lookupDate]);
+        const [rows] = await connection.execute('SELECT selected_date, names, color, startTime, endTime, roomNumber FROM selected_dates_3 WHERE selected_date = ?', [lookupDate]);
         connection.release();
 
         if (rows.length > 0) {
@@ -234,75 +279,6 @@ app.get('/fetchDataByDate', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
-// Express route to fetch all data for today
-app.get('/dateData', async (req, res) => {
-    try {
-        const nowMoment = moment().format('YYYY-MM-DD');
-
-        const connection = await pool.getConnection();
-        const [rows] = await connection.execute('SELECT names, color, startTime, endTime, roomNumber FROM selected_dates_3 WHERE selected_date = ?', [nowMoment]);
-        connection.release();
-
-        if (rows.length > 0) {
-            // res.json(rows);
-            // Render the room EJS template with the room schedule data
-            res.render('dateData', { data: rows, roomNumber: '2' });
-            console.log('Fetched Data:', nowMoment);
-        } else {
-            res.status(404).json({ error: 'No data found for the specified date.' });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-
-app.post('/therapist-form', async (req, res) => {
-    try {
-        const formData = req.body;
-        const { therapistName, roomNumber, startTime, endTime, selectedDate } = formData;
-
-
-        const connection = await pool.getConnection();
-        try {
-            await connection.execute(
-                'INSERT INTO selected_dates_3 ( roomNumber, startTime, endTime) VALUES (?, ?, ?)',
-                [roomNumber, startTime, endTime]
-            );
-        } finally {
-            connection.release();
-        }
-
-        console.log('Data inserted into the database:', formData);
-        res.status(200).send('Data inserted into the database successfully');
-    } catch (error) {
-        console.error('Error handling therapist-form data:', error);
-        res.status(500).send('Internal Server Error');
-    }
-});
-
-// Express route to delete a row
-app.post('/deleteRow', async (req, res) => {
-    try {
-        const { roomNumber, startTime, endTime } = req.body;
-        console.log({ roomNumber, startTime, endTime })
-
-        const connection = await pool.getConnection();
-        try {
-            // Delete the row from the database
-            await connection.execute('DELETE FROM selected_dates_3 WHERE roomNumber = ? AND startTime = ? AND endTime = ?', [roomNumber, startTime, endTime]);
-            res.json({ success: true });
-        } finally {
-            connection.release();
-        }
-    } catch (error) {
-        console.error('Error deleting row from the database:', error);
-        res.json({ success: false, error: 'Internal Server Error' });
-    }
-});
-
 
 app.listen(port, '0.0.0.0', () => {
     console.log(`Server is running on http://0.0.0.0:${port}`);
