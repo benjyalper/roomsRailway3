@@ -58,14 +58,32 @@ function setupRoomNameForm() {
             body: JSON.stringify({ rooms })
         }).then(res => {
             if (res.ok) {
-                Swal.fire('החדרים נשמרו', '', 'success').then(() => {
-                    location.reload();
+                Swal.fire('החדרים נשמרו', '', 'success');
+
+                // הסתרת הטופס
+                $('#roomSetupForm').hide();
+
+                // הצגת הגריד
+                const $grid = $('#room-grid').empty();
+                rooms.forEach(label => {
+                    $grid.append(`
+                    <div class="room" data-room-number="${label}">
+                        <div class="room-number">${label}</div>
+                    </div>
+                `);
                 });
+
+                $('.room').click(function () {
+                    const room = $(this).data('room-number');
+                    window.location.href = `/room/${room}`;
+                });
+
             } else {
                 Swal.fire('שגיאה בשמירת החדרים');
             }
         });
     });
+
 }
 
 function initHome() {
