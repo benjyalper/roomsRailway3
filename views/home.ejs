@@ -2,31 +2,104 @@
 <html lang="he" dir="rtl">
 
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>סידור חדרים</title>
-        <link rel="stylesheet" href="/style.css">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+        <!-- סגנונות -->
+        <link rel="stylesheet" href="/style.css" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     </head>
 
     <body>
-        <!-- fixed navbar with your page title already in it -->
+        <!-- ניווט עליון -->
         <%- include('partials/navbar') %>
 
-        <!-- purely decorative “sea‐tone” banner -->
+        <!-- באנר עיצובי -->
         <div class="page-banner"></div>
 
         <div class="container mt-3 pt-3 text-center">
-            <!-- no <h1> here anymore -->
-            <div id="room-grid" class="room-grid"></div>
+
+            <!-- טופס להוספת חדרים -->
+            <div id="roomSetupForm">
+                <h5>הזן שמות חדרים:</h5>
+                <div class="input-group mb-3">
+                    <input type="text" id="roomNameInput" class="form-control" placeholder="לדוגמה: 1, 2, מקלט" />
+                    <button class="btn btn-primary" id="addRoomBtn">הוסף</button>
+                </div>
+                <ul id="roomList" class="list-group mb-3"></ul>
+                <button class="btn btn-success" id="submitRoomsBtn">אשר חדרים</button>
+            </div>
+
+            <!-- גריד חדרים שיופיע לאחר שליחה -->
+            <div id="room-grid" class="room-grid mt-4"></div>
+
         </div>
 
+        <!-- סקריפטים -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
         <script src="/script.js"></script>
+
+        <script>
+            // דינמיקה של טופס החדרים
+            $(document).ready(function () {
+                const rooms = [];
+
+                $('#addRoomBtn').click(function () {
+                    const room = $('#roomNameInput').val().trim();
+                    if (!room) return;
+                    rooms.push(room);
+                    $('#roomList').append(`<li class="list-group-item">${room}</li>`);
+                    $('#roomNameInput').val('');
+                });
+
+                $('#submitRoomsBtn').click(function () {
+                    if (rooms.length === 0) {
+                        return Swal.fire('לא הוזנו חדרים');
+                    }
+
+                    fetch('/saveRooms', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ rooms })
+                    }).then(res => {
+                        if (res.ok) {
+                            Swal.fire('החדרים נשמרו', '', 'success').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('שגיאה בשמירת החדרים');
+                        }
+                    });
+                });
+
+                // הצגת החדרים הקיימים אם קיימים
+                fetch('/getRooms')
+                    .then(res => res.json())
+                    .then(rooms => {
+                        if (!rooms.length) return;
+                        $('#roomSetupForm').hide(); // הסתרת הטופס אם יש כבר חדרים
+
+                        const $grid = $('#room-grid').empty();
+                        rooms.forEach(label => {
+                            $grid.append(`
+                            <div class="room" data-room-number="${label}">
+                                <div class="room-number">${label}</div>
+                            </div>
+                        `);
+                        });
+
+                        $('.room').click(function () {
+                            const room = $(this).data('room-number');
+                            window.location.href = `/room/${room}`;
+                        });
+                    });
+            });
+        </script>
     </body>
 
 </html>

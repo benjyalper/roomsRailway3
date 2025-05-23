@@ -380,6 +380,71 @@ app.use((err, req, res, next) => {
     res.status(500).send(`Server error: ${err.message}`);
 });
 
+// ─── TEMP ROOM STORAGE IN SESSION ───────────────────────────────────────────
+app.post('/saveRooms', isAuthenticated, (req, res) => {
+    const rooms = req.body.rooms;
+    if (!Array.isArray(rooms) || rooms.length === 0) {
+        return res.status(400).json({ error: 'Invalid room list' });
+    }
+    req.session.rooms = rooms;
+    res.sendStatus(200);
+});
+
+app.get('/getRooms', isAuthenticated, (req, res) => {
+    const rooms = req.session.rooms || [];
+    res.json(rooms);
+});
+
+app.post('/saveRooms', isAuthenticated, isAdmin, async (req, res) => {
+    const rooms = req.body.rooms;
+    const clinic = req.user.clinic;
+
+    if (!Array.isArray(rooms) || rooms.length === 0) {
+        return res.status(400).json({ error: 'Invalid room list' });
+    }
+
+    const conn = await pool.getConnection();
+    try {
+        await conn.beginTransaction();
+
+        // Clear existing rooms for this clinic
+        await conn.execute('DELETE FROM clinics_rooms WHERE clinic = ?', [clinic]);
+
+        // Insert new rooms
+        for (const room of rooms) {
+            await conn.execute('INSERT INTO clinics_rooms (clinic, room_name) VALUES (?, ?)', [clinic, room]);
+        }
+
+        await conn.commit();
+        conn.release();
+        res.sendStatus(200);
+
+    } catch (e) {
+        await conn.rollback();
+        conn.release();
+        console.error(e);
+        res.status(500).json({ error: 'DB error' });
+    }
+});
+
+// ─── GET ROOM NAMES BY CLINIC ───────────────────────────────────────────────
+app.get('/getRooms', isAuthenticated, async (req, res) => {
+    const clinic = req.user.clinic;
+    const conn = await pool.getConnection();
+
+    try {
+        const [rows] = await conn.execute('SELECT room_name FROM clinics_rooms WHERE clinic = ?', [clinic]);
+        conn.release();
+        res.json(rows.map(r => r.room_name));
+
+    } catch (e) {
+        conn.release();
+        console.error(e);
+        res.status(500).json({ error: 'DB error' });
+    }
+});
+
+
 // ─── START SERVER ─────────────────────────────────────────────────────────────
 app.listen(port, '0.0.0.0', () =>
     console.log(`Listening on port ${port}`)

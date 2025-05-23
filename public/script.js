@@ -1,6 +1,3 @@
-// script.js
-// Main JavaScript for all pages
-
 const TIMES = [
     '07:00', '07:30', '08:00', '08:30', '09:00', '09:30',
     '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
@@ -11,8 +8,14 @@ const TIMES = [
 
 $(document).ready(function () {
     setupNavigation();
+
+    // אם יש טופס להוספת חדרים
+    if ($('#roomNameInput').length) setupRoomNameForm();
+
+    // אם יש גריד של חדרים
     if ($('#room-grid').length) initHome();
-    if ($('#scheduleTable').length) initSchedule();      // ← look for the table
+
+    if ($('#scheduleTable').length) initSchedule();
     if ($('#roomForm').length) initRoomForm();
     if ($('#messageList').length) displayLast10Messages();
 });
@@ -32,38 +35,69 @@ function setupNavigation() {
     $('#backHome').click(() => { window.location.href = '/home'; });
 }
 
-function initHome() {
-    // 1) Define your rooms however you like:
-    const rooms = ['1', '2', '3', '4', '5', '6', '7', '8', '15', 'מקלט'];
+// טופס לבחירת שמות חדרים
+function setupRoomNameForm() {
+    const rooms = [];
 
-    // 2) Grab & clear the grid container
-    const $grid = $('#room-grid').empty();
-
-    // 3) Render each room from the array
-    rooms.forEach(label => {
-        $grid.append(`
-      <div class="room" data-room-number="${label}">
-        <div class="room-number">${label}</div>
-      </div>
-    `);
+    $('#addRoomBtn').click(function () {
+        const room = $('#roomNameInput').val().trim();
+        if (!room) return;
+        rooms.push(room);
+        $('#roomList').append(`<li class="list-group-item">${room}</li>`);
+        $('#roomNameInput').val('');
     });
 
-    // 4) Preserve the click behavior
-    $('.room').click(function () {
-        const room = $(this).data('room-number');
-        window.location.href = `/room/${room}`;
+    $('#submitRoomsBtn').click(function () {
+        if (rooms.length === 0) {
+            return Swal.fire('לא הוזנו חדרים');
+        }
+
+        fetch('/saveRooms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rooms })
+        }).then(res => {
+            if (res.ok) {
+                Swal.fire('החדרים נשמרו', '', 'success').then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire('שגיאה בשמירת החדרים');
+            }
+        });
     });
 }
 
+function initHome() {
+    fetch('/getRooms')
+        .then(res => res.json())
+        .then(rooms => {
+            if (!rooms || rooms.length === 0) return;
+
+            $('#roomSetupForm').hide(); // הסתרת טופס אם יש חדרים
+
+            const $grid = $('#room-grid').empty();
+            rooms.forEach(label => {
+                $grid.append(`
+                    <div class="room" data-room-number="${label}">
+                        <div class="room-number">${label}</div>
+                    </div>
+                `);
+            });
+
+            $('.room').click(function () {
+                const room = $(this).data('room-number');
+                window.location.href = `/room/${room}`;
+            });
+        });
+}
+
 function initSchedule() {
-    // 1) Set the date picker to today
     const today = moment().format('YYYY-MM-DD');
     $('#lookupDate')
         .val(today)
-        .off('change')            // remove any old handlers
+        .off('change')
         .on('change', fetchDataByDate);
-
-    // 2) Load data for today
     fetchDataByDate();
 }
 
@@ -78,15 +112,8 @@ function fetchDataByDate() {
 }
 
 function updateScheduleGrid(rows) {
-    // Clear styling and content from all the existing table cells
-    $('#scheduleTable td.grid-cell')
-        .removeAttr('style')
-        .empty();
-
-    // For each booking, find the matching cells and color them
+    $('#scheduleTable td.grid-cell').removeAttr('style').empty();
     (rows || []).forEach(r => {
-        const selector = `[data-room-hour="${r.roomNumber} ${r.startTime}"]`;
-        // Actually we need all cells whose data-room-hour time is between startTime (inclusive) and endTime (exclusive):
         const $cells = $('#scheduleTable td.grid-cell').filter(function () {
             const [room, time] = $(this).data('room-hour').split(' ');
             return (
@@ -96,17 +123,14 @@ function updateScheduleGrid(rows) {
             );
         });
 
-        // Style the range of cells
         $cells.css({
             backgroundColor: r.color,
             border: `2px solid ${r.color}`
         });
 
-        // Show the therapist’s name in the middle cell
         const $middle = $cells.eq(Math.floor($cells.length / 2));
         $middle.html(`<div class="therapist-name">${r.names}</div>`);
 
-        // Tooltip + click‐to‐delete
         $cells
             .attr('title', `מטפל/ת: ${r.names}\nחדר: ${r.roomNumber}`)
             .tooltip()
@@ -119,12 +143,8 @@ function updateScheduleGrid(rows) {
                     cancelButtonText: 'לא'
                 }).then(res => {
                     if (res.isConfirmed) {
-                        deleteEntry(
-                            $('#lookupDate').val(),
-                            r.roomNumber,
-                            r.startTime,
-                            r.endTime
-                        ).then(fetchDataByDate);
+                        deleteEntry($('#lookupDate').val(), r.roomNumber, r.startTime, r.endTime)
+                            .then(fetchDataByDate);
                     }
                 });
             });
@@ -143,9 +163,6 @@ function deleteEntry(date, room, start, end) {
         })
     });
 }
-
-// ... the rest of your initRoomForm, messages, etc. remains unchanged ...
-
 
 function initRoomForm() {
     const $start = $('#startTime').empty();
@@ -173,7 +190,6 @@ function initRoomForm() {
             recurringNum: $('#recurringNum').val()
         };
 
-        // פנוי detection and message submission
         if (data.names.trim() === "פנוי") {
             const messageInput = `חדר ${data.roomNumber} פנוי בתאריך ${data.selectedDate} בשעות ${data.startTime} - ${data.endTime}`;
             await fetch('/submit_message', {
@@ -193,7 +209,6 @@ function initRoomForm() {
         $('#roomForm')[0].reset();
         updateEndTimeOptions();
     });
-
 }
 
 function updateEndTimeOptions() {
@@ -210,17 +225,11 @@ function displayLast10Messages() {
         .then(data => {
             const list = $('#messageList').empty();
             data.messages.forEach((msg, i) => {
-                const item = $(`
-          <div class="item list-group-item animate__fadeInRight" data-index="${i}">
-            <div>${msg}</div>
-          </div>
-        `);
-                const check = $(
-                    '<i class="fas fa-check-square" style="color:lightgray;"></i>'
-                ).click(() => check.css('color', 'limegreen'));
-                const trash = $(
-                    '<i class="fas fa-trash" style="color:darkgray;"></i>'
-                ).click(() => deleteMessage(data.messageIds[i], item));
+                const item = $(`<div class="item list-group-item animate__fadeInRight" data-index="${i}"><div>${msg}</div></div>`);
+                const check = $('<i class="fas fa-check-square" style="color:lightgray;"></i>')
+                    .click(() => check.css('color', 'limegreen'));
+                const trash = $('<i class="fas fa-trash" style="color:darkgray;"></i>')
+                    .click(() => deleteMessage(data.messageIds[i], item));
                 item.append($('<div>').append(check, trash));
                 list.append(item);
             });
@@ -237,17 +246,12 @@ function submitMessage() {
     })
         .then(r => r.json())
         .then(res => {
-            const item = $(`
-        <div class="item animate__animated animate__bounce">
-          <div>${input}</div>
-        </div>
-      `).attr('data-id', res.messageId);
-            const check = $(
-                '<i class="fas fa-check-square" style="color:lightgray;"></i>'
-            ).click(() => check.css('color', 'limegreen'));
-            const trash = $(
-                '<i class="fas fa-trash" style="color:darkgray;"></i>'
-            ).click(() => deleteMessage(res.messageId, item));
+            const item = $(`<div class="item animate__animated animate__bounce"><div>${input}</div></div>`)
+                .attr('data-id', res.messageId);
+            const check = $('<i class="fas fa-check-square" style="color:lightgray;"></i>')
+                .click(() => check.css('color', 'limegreen'));
+            const trash = $('<i class="fas fa-trash" style="color:darkgray;"></i>')
+                .click(() => deleteMessage(res.messageId, item));
             item.append($('<div>').append(check, trash));
             $('#messageList').prepend(item);
             $('#input').val('');
